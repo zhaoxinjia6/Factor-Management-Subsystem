@@ -3,6 +3,7 @@ package com.factor.interfaces.rest;
 import com.factor.common.api.ApiResponse;
 import com.factor.domain.factor.*;
 import com.factor.domain.factor.repository.*;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 import javax.sql.DataSource;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/factors/analysis")
+@Profile("jpa")
 public class FactorAnalysisController {
 
     private final BaseFactorRepository baseFactorRepository;

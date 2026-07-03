@@ -10,6 +10,46 @@
 
 SET search_path TO biz_factor;
 
+-- ============================================================
+-- Python 同步模块需要的表（原由 akshare-factor-sync 创建）
+-- ============================================================
+
+-- 基金基本信息
+CREATE TABLE IF NOT EXISTS ak_fund_profile (
+    fund_code VARCHAR(32) NOT NULL,
+    fund_name VARCHAR(255) NOT NULL,
+    fund_type VARCHAR(128),
+    company_name VARCHAR(255),
+    manager_name VARCHAR(255),
+    issue_date DATE,
+    setup_date DATE,
+    fund_size VARCHAR(64),
+    fee_rate VARCHAR(64),
+    source_url TEXT,
+    source_system VARCHAR(64) NOT NULL DEFAULT 'akshare',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ak_fund_profile PRIMARY KEY (fund_code)
+);
+
+-- 基金净值
+CREATE TABLE IF NOT EXISTS ak_fund_nav (
+    fund_code VARCHAR(32) NOT NULL,
+    fund_name VARCHAR(255),
+    trade_date DATE NOT NULL,
+    nav_value NUMERIC(24, 8),
+    accum_nav_value NUMERIC(24, 8),
+    daily_growth_rate NUMERIC(24, 8),
+    source_system VARCHAR(64) NOT NULL DEFAULT 'akshare',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_ak_fund_nav PRIMARY KEY (fund_code, trade_date)
+);
+
+-- ============================================================
+-- 基础业务表
+-- ============================================================
+
 -- 基础因子定义
 CREATE TABLE IF NOT EXISTS base_factor (
     id VARCHAR(64) PRIMARY KEY,
@@ -191,5 +231,3 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO style_factor (id, name, created_by, created_at, description, enabled) VALUES
     ('sf-1', '稳健风格因子', 'system', CURRENT_TIMESTAMP, '稳健收益风格', TRUE)
 ON CONFLICT (id) DO NOTHING;
-
--- 风格因子（示例）

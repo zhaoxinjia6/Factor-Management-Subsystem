@@ -23,26 +23,26 @@ describe('LoginPage 登录页', () => {
     expect(wrapper.find('.login-card').exists()).toBe(true)
   })
 
-  it('默认用户名为 admin', () => {
+  it('默认用户名为 customer', () => {
     const wrapper = factory()
-    expect(wrapper.vm.form.username).toBe('admin')
+    expect(wrapper.vm.form.username).toBe('customer')
   })
 
-  it('默认密码为 admin123', () => {
+  it('默认密码为 customer123', () => {
     const wrapper = factory()
-    expect(wrapper.vm.form.password).toBe('admin123')
+    expect(wrapper.vm.form.password).toBe('customer123')
   })
 
-  it('默认身份选择为 SYSTEM_ADMIN', () => {
+  it('默认身份选择为 CUSTOMER', () => {
     const wrapper = factory()
-    expect(wrapper.vm.form.userType).toBe('SYSTEM_ADMIN')
+    expect(wrapper.vm.form.userType).toBe('CUSTOMER')
   })
 
   it('身份下拉应包含 3 个选项', () => {
     const wrapper = factory()
     const options = wrapper.findAll('el-select-stub el-option-stub')
     // Element Plus stub 环境下验证默认值
-    expect(wrapper.vm.form.userType).toBe('SYSTEM_ADMIN')
+    expect(wrapper.vm.form.userType).toBe('CUSTOMER')
   })
 
   it('提示信息默认为请选择身份后登录', () => {
@@ -53,7 +53,7 @@ describe('LoginPage 登录页', () => {
   it('登录按钮存在', () => {
     const wrapper = factory()
     // 用 vm 验证 form 数据，避免 shallowMount 不渲染子组件细节
-    expect(wrapper.vm.form.username).toBe('admin')
-    expect(wrapper.vm.form.password).toBe('admin123')
+    expect(wrapper.vm.form.username).toBe('customer')
+    expect(wrapper.vm.form.password).toBe('customer123')
   })
 })

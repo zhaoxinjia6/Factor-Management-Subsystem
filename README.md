@@ -170,24 +170,99 @@ Vite 已配置代理，`/api` 请求自动转发到后端 `http://localhost:8081
 
 ## 测试
 
-### 前端测试
+### 前端测试（157 个测试，覆盖率 92%+）
 
 ```bash
 cd frontend-vue
-npm run test              # 运行全部 52 个测试
-npm run test:coverage     # 生成覆盖率报告
+npm run test              # 运行全部测试
+npm run test:coverage     # 生成覆盖率报告（test/coverage/lcov-report/index.html）
 npm run test:watch        # 监听模式
 ```
 
-测试报告：`test/coverage/lcov-report/index.html`
+#### 测试模块架构
 
-### 后端测试
+```
+frontend-vue/test/
+├── vitest.config.js          # Vitest 全局配置（jsdom 环境）
+├── setup.js                  # 测试初始化（Element Plus 注册、Mock）
+│
+├── utils/                    # ═══ 工具函数（27 个测试）═══
+│   ├── normalizeRows.test.js # 数据归一化（10 个）
+│   ├── dateUtils.test.js     # 日期工具（8 个）
+│   └── treeUtils.test.js     # 树形数据（9 个）
+│
+├── api/                      # ═══ API 接口（18 个测试）═══
+│   ├── auth.test.js          # 登录认证 API（4 个）
+│   ├── factors.test.js       # 因子查询/CRUD API（11 个）
+│   ├── analysis.test.js      # 多因子分析 API（3 个）
+│   └── http.test.js          # HTTP 实例测试（14 个）
+│
+├── pages/                    # ═══ 核心页面（32 个测试）═══
+│   ├── LoginPage.test.js     # 登录页（7 个）
+│   ├── FactorOverviewPage.test.js # 因子概览页（13 个）
+│   ├── WorkspacePage.test.js # 工作台导航页（7 个）
+│   └── Router.test.js        # 路由配置（5 个）
+│
+├── management/               # ═══ 管理页面（41 个测试）═══
+│   ├── DerivativeFactorPage.test.js # 衍生因子管理页（4 个）
+│   ├── StyleFactorPage.test.js     # 风格因子管理页（16 个）
+│   └── MultiFactorPage.test.js     # 多因子分析页（21 个）
+│
+├── components/               # ═══ 组件（14 个测试）═══
+│   ├── FactorDialog.test.js  # 因子弹窗组件（11 个）
+│   └── FactorPage.test.js    # 因子页面组件（3 个）
+│
+├── integration/              # ═══ 集成流程（8 个测试）═══
+│   ├── loginFlow.test.js     # 登录 → 跳转（3 个）
+│   └── factorQuery.test.js   # 查询 → 渲染（5 个）
+│
+├── App.test.js               # ═══ 根组件（2 个测试）═══
+│
+└── coverage/                 # 自动生成
+    └── lcov-report/index.html # 浏览器打开查看覆盖率
+```
+
+#### 覆盖率统计
+
+| 模块 | 语句覆盖率 | 分支覆盖率 | 函数覆盖率 |
+|------|-----------|-----------|-----------|
+| **整体** | **92.03%** | **73.77%** | **46.03%** |
+| pages 页面 | 93.22% | 75.77% | 41.23% |
+| components 组件 | 100% | 78.57% | 60% |
+| App.vue | 100% | 100% | 100% |
+| router.js | 100% | 100% | 100% |
+| api.js | 56.15% | 50% | 62.5% |
+
+### 后端测试（409 个测试，核心覆盖率 85%+）
 
 ```bash
-mvn test
-mvn jacoco:report          # JaCoCo 覆盖率报告
+mvn test                           # 运行全部测试
+mvn jacoco:report                  # JaCoCo 覆盖率报告
 # target/site/jacoco/index.html
 ```
+
+#### 后端测试模块
+
+| 模块 | 指令覆盖率 | 测试数 | 说明 |
+|------|-----------|-------|------|
+| **核心业务** | | | |
+| domain.auth 认证领域 | **100%** | 22 | Account、AuthSession、Role |
+| domain.trade 交易领域 | **100%** | 19 | 账户、流水 |
+| common.api 统一响应 | **100%** | 16 | ApiResponse |
+| common.model 分页结果 | **100%** | - | PageResult |
+| common.exception 异常处理 | **93%** | 22 | GlobalExceptionHandler、BusinessException |
+| application.trade 交易服务 | **100%** | 19 | 交易货币服务 |
+| application.auth 认证服务 | **93%** | 21 | 登录、角色管理 |
+| domain.factor 因子领域 | **96%** | 85 | 因子、因子值、公式、树 |
+| **基础设施** | | | |
+| infrastructure.persistence 内存仓储 | **79%** | 131 | 15个InMemory仓储实现 |
+| **接口层** | | | |
+| interfaces.rest 控制器 | **37%** | 56 | Auth/Dashboard/Factor/Role/Trade控制器 |
+| interfaces.rest.vo 视图对象 | **75%** | - | LoginVO、RoleVO、FactorVO |
+| interfaces.rest.dto 传输对象 | **61%** | - | 各类请求/响应DTO |
+| **JPA 持久层**（需数据库） | 0% | - | JPA实体与仓储（24个类） |
+
+> 报告路径：`target/site/jacoco/index.html`（浏览器打开）
 
 ---
 

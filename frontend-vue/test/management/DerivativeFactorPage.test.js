@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import * as api from '../../src/api'
-import DerivativeFactorPage from '@/pages/DerivativeFactorPage.vue'
+import DerivativeFactorPage from '@pages/DerivativeFactorPage.vue'
 
 describe('DerivativeFactorPage', () => {
   let wrapper

@@ -1,11 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import * as api from '../../src/api'
 import { ElMessageBox } from 'element-plus'
-import StyleFactorPage from '@/pages/StyleFactorPage.vue'
+import StyleFactorPage from '@pages/StyleFactorPage.vue'
 
 // Mock ElMessageBox
 vi.mock('element-plus', async () => {

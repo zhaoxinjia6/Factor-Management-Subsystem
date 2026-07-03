@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import * as api from '../../src/api'
-import MultiFactorPage from '@/pages/MultiFactorPage.vue'
+import MultiFactorPage from '@pages/MultiFactorPage.vue'
 
 // Mock ECharts
 vi.mock('echarts', () => ({

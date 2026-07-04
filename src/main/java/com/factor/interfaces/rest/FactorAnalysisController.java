@@ -3,7 +3,9 @@ package com.factor.interfaces.rest;
 import com.factor.common.api.ApiResponse;
 import com.factor.domain.factor.*;
 import com.factor.domain.factor.repository.*;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import javax.sql.DataSource;
@@ -12,6 +14,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @RestController
@@ -24,6 +27,9 @@ public class FactorAnalysisController {
     private final BaseFactorValueRepository baseFactorValueRepository;
     private final DataSource dataSource;
 
+    /** 本地缓存：因子效能榜单数据，每 60s 刷新一次 */
+    private volatile List<Map<String, Object>> performanceCache = Collections.emptyList();
+
     public FactorAnalysisController(BaseFactorRepository baseFactorRepository,
                                      DerivativeFactorRepository derivativeFactorRepository,
                                      BaseFactorValueRepository baseFactorValueRepository,
@@ -34,88 +40,104 @@ public class FactorAnalysisController {
         this.dataSource = dataSource;
     }
 
-    /** 因子效能榜单（基于数据库真实因子值统计） */
+    /** 启动时预热缓存 */
+    @PostConstruct
+    public void warmCache() {
+        refreshPerformanceCache();
+    }
+
+    /** 因子效能榜单（从缓存读取，避免高并发下重复全表扫描） */
     @GetMapping("/performance")
     public ApiResponse<List<Map<String, Object>>> performance(@RequestParam(defaultValue = "all") String pool,
                                                                @RequestParam(required = false) String category) {
-        List<Map<String, Object>> list = new ArrayList<>();
-
-        // 从 base_factor_value 读取因子值统计
-        try (Connection conn = dataSource.getConnection()) {
-            var stmt = conn.createStatement();
-            stmt.execute("SET search_path TO biz_factor");
-
-            // 每个因子的统计数据：均值、标准差、数量
-            var rs = stmt.executeQuery(
-                "SELECT base_factor_id, COUNT(*) cnt, AVG(value) avg_val, STDDEV(value) std_val " +
-                "FROM base_factor_value GROUP BY base_factor_id"
-            );
-            Map<String, double[]> stats = new HashMap<>();
-            while (rs.next()) {
-                stats.put(rs.getString("base_factor_id"), new double[]{
-                    rs.getDouble("cnt"), rs.getDouble("avg_val"), rs.getDouble("std_val")
-                });
-            }
-
-            // 基础因子
-            baseFactorRepository.findAll().forEach(bf -> {
-                double[] s = stats.getOrDefault(bf.id(), new double[]{1, 0, 0.1});
-                double std = Math.max(s[2], 0.001);
-                double icEstimate = Math.min(Math.abs(s[1]) / std * 0.15, 0.15);
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("id", bf.id());
-                m.put("name", bf.name());
-                m.put("code", bf.code());
-                m.put("category", bf.categoryId() != null ? getCategoryName(bf.categoryId()) : "未分类");
-                m.put("icMean", round(icEstimate, 4));
-                m.put("ir", round(icEstimate / Math.max(std * 0.1, 0.01), 2));
-                m.put("excessReturn", round(icEstimate * 100 * 2.5, 2));
-                m.put("monthlyWinRate", round(50 + icEstimate * 200, 1));
-                m.put("description", bf.description());
-                m.put("type", "base");
-                m.put("std", round(std, 4));
-                m.put("avg", round(s[1], 4));
-                if (category == null || category.equals("all") || m.get("category").equals(category))
-                    list.add(m);
-            });
-
-            // 衍生因子
-            var rs2 = stmt.executeQuery(
-                "SELECT derivative_factor_id, COUNT(*) cnt, AVG(value) avg_val, STDDEV(value) std_val " +
-                "FROM derivative_factor_value GROUP BY derivative_factor_id"
-            );
-            Map<String, double[]> dStats = new HashMap<>();
-            while (rs2.next()) {
-                dStats.put(rs2.getString("derivative_factor_id"), new double[]{
-                    rs2.getDouble("cnt"), rs2.getDouble("avg_val"), rs2.getDouble("std_val")
-                });
-            }
-
-            derivativeFactorRepository.findAll().forEach(df -> {
-                double[] s = dStats.getOrDefault(df.id(), new double[]{1, 0, 0.1});
-                double std = Math.max(s[2], 0.001);
-                double icEstimate = Math.min(Math.abs(s[1]) / std * 0.12, 0.12);
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("id", df.id());
-                m.put("name", df.name());
-                m.put("code", df.code());
-                m.put("category", "衍生因子");
-                m.put("icMean", round(icEstimate, 4));
-                m.put("ir", round(icEstimate / Math.max(std * 0.1, 0.01), 2));
-                m.put("excessReturn", round(icEstimate * 100 * 2.0, 2));
-                m.put("monthlyWinRate", round(50 + icEstimate * 180, 1));
-                m.put("description", df.description());
-                m.put("type", "derived");
-                m.put("std", round(std, 4));
-                m.put("avg", round(s[1], 4));
-                if (category == null || category.equals("all") || m.get("category").equals(category))
-                    list.add(m);
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
+        List<Map<String, Object>> list = performanceCache;
+        if (category != null && !category.isEmpty() && !category.equals("all")) {
+            list = list.stream()
+                .filter(m -> category.equals(m.get("category")))
+                .collect(Collectors.toList());
         }
-
         return ApiResponse.ok(list);
+    }
+
+    /** 每 60 秒后台刷新缓存 */
+    @Scheduled(fixedDelay = 60_000)
+    public void refreshPerformanceCache() {
+        try {
+            List<Map<String, Object>> list = new ArrayList<>();
+            try (Connection conn = dataSource.getConnection()) {
+                var stmt = conn.createStatement();
+                stmt.execute("SET search_path TO biz_factor");
+
+                // 每个因子的统计数据：均值、标准差、数量
+                var rs = stmt.executeQuery(
+                    "SELECT base_factor_id, COUNT(*) cnt, AVG(value) avg_val, STDDEV(value) std_val " +
+                    "FROM base_factor_value GROUP BY base_factor_id"
+                );
+                Map<String, double[]> stats = new HashMap<>();
+                while (rs.next()) {
+                    stats.put(rs.getString("base_factor_id"), new double[]{
+                        rs.getDouble("cnt"), rs.getDouble("avg_val"), rs.getDouble("std_val")
+                    });
+                }
+
+                // 基础因子
+                baseFactorRepository.findAll().forEach(bf -> {
+                    double[] s = stats.getOrDefault(bf.id(), new double[]{1, 0, 0.1});
+                    double std = Math.max(s[2], 0.001);
+                    double icEstimate = Math.min(Math.abs(s[1]) / std * 0.15, 0.15);
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", bf.id());
+                    m.put("name", bf.name());
+                    m.put("code", bf.code());
+                    m.put("category", bf.categoryId() != null ? getCategoryName(bf.categoryId()) : "未分类");
+                    m.put("icMean", round(icEstimate, 4));
+                    m.put("ir", round(icEstimate / Math.max(std * 0.1, 0.01), 2));
+                    m.put("excessReturn", round(icEstimate * 100 * 2.5, 2));
+                    m.put("monthlyWinRate", round(50 + icEstimate * 200, 1));
+                    m.put("description", bf.description());
+                    m.put("type", "base");
+                    m.put("std", round(std, 4));
+                    m.put("avg", round(s[1], 4));
+                    list.add(m);
+                });
+
+                // 衍生因子
+                var rs2 = stmt.executeQuery(
+                    "SELECT derivative_factor_id, COUNT(*) cnt, AVG(value) avg_val, STDDEV(value) std_val " +
+                    "FROM derivative_factor_value GROUP BY derivative_factor_id"
+                );
+                Map<String, double[]> dStats = new HashMap<>();
+                while (rs2.next()) {
+                    dStats.put(rs2.getString("derivative_factor_id"), new double[]{
+                        rs2.getDouble("cnt"), rs2.getDouble("avg_val"), rs2.getDouble("std_val")
+                    });
+                }
+
+                derivativeFactorRepository.findAll().forEach(df -> {
+                    double[] s = dStats.getOrDefault(df.id(), new double[]{1, 0, 0.1});
+                    double std = Math.max(s[2], 0.001);
+                    double icEstimate = Math.min(Math.abs(s[1]) / std * 0.12, 0.12);
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", df.id());
+                    m.put("name", df.name());
+                    m.put("code", df.code());
+                    m.put("category", "衍生因子");
+                    m.put("icMean", round(icEstimate, 4));
+                    m.put("ir", round(icEstimate / Math.max(std * 0.1, 0.01), 2));
+                    m.put("excessReturn", round(icEstimate * 100 * 2.0, 2));
+                    m.put("monthlyWinRate", round(50 + icEstimate * 180, 1));
+                    m.put("description", df.description());
+                    m.put("type", "derived");
+                    m.put("std", round(std, 4));
+                    m.put("avg", round(s[1], 4));
+                    list.add(m);
+                });
+            }
+            performanceCache = list;
+        } catch (Exception e) {
+            // 缓存刷新失败时保留旧缓存，不中断请求
+            System.err.println("[performance-cache] refresh failed: " + e.getMessage());
+        }
     }
 
     /** 因子相关性矩阵 */

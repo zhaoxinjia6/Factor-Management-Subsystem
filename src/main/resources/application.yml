@@ -4,15 +4,33 @@ spring:
   application:
     name: factor-management-subsystem
   profiles:
-    active: dev
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+    active: jpa
+  datasource:
+    url: jdbc:kingbase8://127.0.0.1:54321/kingbase?currentSchema=biz_factor
+    username: system
+    password: ysb18316923897
+    driver-class-name: com.kingbase8.Driver
+    hikari:
+      maximum-pool-size: 60
+      minimum-idle: 20
+      connection-timeout: 10000
+      idle-timeout: 300000
+      max-lifetime: 600000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        default_schema: biz_factor
+        jdbc:
+          time_zone: Asia/Shanghai
   sql:
     init:
-      mode: never
+      mode: always
+      continue-on-error: true
+      schema-locations: classpath:schema.sql
 management:
   endpoints:
     web:

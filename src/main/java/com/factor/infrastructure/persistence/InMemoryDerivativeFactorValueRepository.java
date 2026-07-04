@@ -22,6 +22,9 @@ public class InMemoryDerivativeFactorValueRepository implements DerivativeFactor
 
     @Override
     public List<DerivativeFactorValue> query(String fundCode, String factorId) {
-        return storage.stream().filter(item -> item.fundCode().equals(fundCode) && item.derivativeFactorId().equals(factorId)).toList();
+        return storage.stream()
+                .filter(item -> fundCode == null || fundCode.isEmpty() || item.fundCode().equals(fundCode))
+                .filter(item -> factorId == null || factorId.isEmpty() || item.derivativeFactorId().equals(factorId))
+                .toList();
     }
 }

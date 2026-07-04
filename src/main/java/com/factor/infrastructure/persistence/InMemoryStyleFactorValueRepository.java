@@ -22,6 +22,9 @@ public class InMemoryStyleFactorValueRepository implements StyleFactorValueRepos
 
     @Override
     public List<StyleFactorValue> query(String fundCode, String factorId) {
-        return storage.stream().filter(item -> item.fundCode().equals(fundCode) && item.styleFactorId().equals(factorId)).toList();
+        return storage.stream()
+                .filter(item -> fundCode == null || fundCode.isEmpty() || item.fundCode().equals(fundCode))
+                .filter(item -> factorId == null || factorId.isEmpty() || item.styleFactorId().equals(factorId))
+                .toList();
     }
 }

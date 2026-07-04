@@ -231,3 +231,9 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO style_factor (id, name, created_by, created_at, description, enabled) VALUES
     ('sf-1', '稳健风格因子', 'system', CURRENT_TIMESTAMP, '稳健收益风格', TRUE)
 ON CONFLICT (id) DO NOTHING;
+
+-- ═══════════════════════════════════════════
+-- 性能优化：多因子分析查询索引
+-- ═══════════════════════════════════════════
+CREATE INDEX IF NOT EXISTS idx_base_factor_value_factor_id ON base_factor_value(base_factor_id);
+CREATE INDEX IF NOT EXISTS idx_derivative_factor_value_factor_id ON derivative_factor_value(derivative_factor_id);

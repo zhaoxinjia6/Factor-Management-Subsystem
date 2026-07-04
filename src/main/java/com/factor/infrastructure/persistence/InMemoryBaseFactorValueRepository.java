@@ -22,6 +22,9 @@ public class InMemoryBaseFactorValueRepository implements BaseFactorValueReposit
 
     @Override
     public List<BaseFactorValue> query(String fundCode, String factorId) {
-        return storage.stream().filter(item -> item.fundCode().equals(fundCode) && item.baseFactorId().equals(factorId)).toList();
+        return storage.stream()
+                .filter(item -> fundCode == null || fundCode.isEmpty() || item.fundCode().equals(fundCode))
+                .filter(item -> factorId == null || factorId.isEmpty() || item.baseFactorId().equals(factorId))
+                .toList();
     }
 }

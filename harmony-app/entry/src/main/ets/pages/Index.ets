@@ -39,7 +39,43 @@ struct Index {
           "'.el-table .el-table__cell{font-size:12px!important;padding:4px 6px!important}'+" +
           "'.factor-actions{flex-wrap:wrap!important;gap:4px!important}.factor-actions .el-button{font-size:12px!important;padding:6px 10px!important}'+" +
           "'.factor-pagination{flex-direction:column!important;gap:4px!important}.factor-pagination .el-pagination{flex-wrap:wrap!important;justify-content:center!important}'+" +
-          "'.panel>.el-dialog{width:95%!important;max-width:95%!important}'+" +
+          "'.panel>.el-dialog{width:100%!important;max-width:100%!important;height:100%!important;max-height:100%!important;margin:0!important;border-radius:0!important;display:flex!important;flex-direction:column!important}'+" +
+          "'.panel>.el-dialog .el-dialog__header{padding:10px 12px!important;border-bottom:1px solid #ebeef5!important}'+" +
+          "'.panel>.el-dialog .el-dialog__header .el-dialog__title{font-size:16px!important}'+" +
+          "'.panel>.el-dialog .el-dialog__header .el-dialog__headerbtn{top:10px!important;right:10px!important}'+" +
+          "'.panel>.el-dialog .el-dialog__body{flex:1!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;padding:12px!important}'+" +
+          "'.panel>.el-dialog .el-dialog__footer{flex-shrink:0!important;padding:8px 12px!important;display:flex!important;gap:8px!important;border-top:1px solid #ebeef5!important}'+" +
+          "'.panel>.el-dialog .el-dialog__footer .el-button{flex:1!important;justify-content:center!important}'+" +
+          /* 表单竖向排版 */
+          "'.factor-manage-page .el-form{overflow:visible!important}'+" +
+          "'.factor-manage-page .el-form-item{display:block!important;margin-bottom:16px!important}'+" +
+          "'.factor-manage-page .el-form-item__label{width:auto!important;text-align:left!important;padding:0 0 4px!important;float:none!important;line-height:1.4!important;height:auto!important}'+" +
+          "'.factor-manage-page .el-form-item__content{margin-left:0!important}'+" +
+          "'.factor-manage-page .el-form-item.is-error .el-form-item__content{margin-left:0!important}'+" +
+          "'.factor-manage-page .el-select,.factor-manage-page .el-input,.factor-manage-page .el-textarea{width:100%!important}'+" +
+          "'.factor-manage-page .el-input-number{width:100%!important}'+" +
+          "'.factor-manage-page .el-input-number .el-input-number__decrease,.factor-manage-page .el-input-number .el-input-number__increase{width:30px!important}'+" +
+          "'.factor-manage-page .el-input-number .el-input__inner{padding-left:34px!important;padding-right:34px!important}'+" +
+          /* 公式编辑器 */
+          "'.factor-manage-page .formula-toolbar{gap:3px!important;padding:4px 6px!important}'+" +
+          "'.factor-manage-page .formula-chip{font-size:11px!important;padding:2px 5px!important;margin:1px!important}'+" +
+          "'.factor-manage-page .formula-hint{font-size:10px!important}'+" +
+          /* 风格因子：el-transfer 竖向排版 */
+          "'.factor-manage-page .el-transfer{display:flex!important;flex-direction:column!important;gap:8px!important;width:100%!important}'+" +
+          "'.factor-manage-page .el-transfer-panel{width:100%!important;max-height:180px!important;border:1px solid #dcdfe6!important;border-radius:6px!important}'+" +
+          "'.factor-manage-page .el-transfer-panel__header{padding:6px 10px!important;font-size:13px!important;background:#f5f7fa!important}'+" +
+          "'.factor-manage-page .el-transfer-panel__body{height:auto!important;max-height:130px!important}'+" +
+          "'.factor-manage-page .el-transfer-panel__list{height:auto!important;max-height:130px!important}'+" +
+          "'.factor-manage-page .el-transfer-panel__item{padding:6px 10px!important}'+" +
+          "'.factor-manage-page .el-transfer__buttons{display:none!important}'+" +
+          "'.factor-manage-page .el-transfer .el-transfer-panel__filter{padding:6px!important}'+" +
+          "'.factor-manage-page .el-transfer .el-transfer-panel__filter .el-input__inner{height:30px!important;font-size:13px!important}'+" +
+          /* 权重表格 */
+          "'.factor-manage-page .el-dialog .el-table--small{font-size:12px!important}'+" +
+          "'.factor-manage-page .el-dialog .el-table--small .el-table__cell{padding:4px 6px!important}'+" +
+          "'.factor-manage-page .el-dialog .el-table__body-wrapper{overflow-x:auto!important}'+" +
+          "'.factor-manage-page .el-dialog .el-table .el-input-number{width:100%!important}'+" +
+          "'.factor-manage-page .el-dialog .el-table .el-input-number .el-input__inner{padding-left:28px!important;padding-right:28px!important}'+" +
           /* card list styles */
           "'.mc-list{padding:0 4px 16px}.mc-card{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #f0f0f0}'+" +
           "'.mc-top{display:flex;align-items:center;margin-bottom:6px}.mc-idx{color:#909399;font-size:12px;min-width:28px}.mc-name{font-size:15px;font-weight:600;color:#303133;flex:1}'+" +
